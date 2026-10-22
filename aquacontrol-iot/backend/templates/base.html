@@ -1,0 +1,68 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}{{ site_name }}{% if user_profile.project_name %} · {{ user_profile.project_name }}{% endif %}{% endblock %}</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+    <script src="https://unpkg.com/htmx.org@1.9.12"></script>
+    <link rel="stylesheet" href="{% static 'monitoring/css/dashboard.css' %}">
+</head>
+<body{% if effective_background_url %} style="background-image:url('{{ effective_background_url }}');background-size:cover;background-position:center;background-attachment:fixed;"{% endif %}>
+    <header class="topbar">
+        <a class="brand" href="{% url 'monitoring:dashboard' %}">
+            {% if effective_logo_url %}
+                <img src="{{ effective_logo_url }}" alt="Logo" class="brand-logo-img">
+            {% else %}
+                <svg class="brand-mark" viewBox="0 0 32 32" width="24" height="24" aria-hidden="true">
+                    <path d="M16 3 C16 3 6 14.5 6 20.5 A10 10 0 0 0 26 20.5 C26 14.5 16 3 16 3 Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"></path>
+                    <path d="M11 21 A5 5 0 0 0 16 26" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path>
+                </svg>
+            {% endif %}
+            {{ site_name }}{% if user_profile.project_name %} · {{ user_profile.project_name }}{% endif %}
+        </a>
+        <nav>
+            {% if user.is_authenticated %}
+                <a href="{% url 'monitoring:product-list' %}">Instalaciones</a>
+                <a href="{% url 'monitoring:device-list' %}">Dispositivos</a>
+                <a href="{% url 'monitoring:devices-map' %}">Mapa</a>
+                <a href="{% url 'monitoring:profile-branding-edit' %}">Personalización</a>
+                {% if user_is_admin_or_global or user_role == "global" %}
+                    <details class="nav-dropdown">
+                        <summary>Configuración</summary>
+                        <div class="nav-dropdown-menu">
+                            {% if user_is_admin_or_global %}
+                                <a href="{% url 'monitoring:user-list' %}">Usuarios</a>
+                            {% endif %}
+                            {% if user_role == "global" %}
+                                <a href="{% url 'monitoring:site-branding-edit' %}">Marca del sitio</a>
+                                <a href="{% url 'monitoring:product-type-list' %}">Tipos de instalación</a>
+                                <a href="{% url 'monitoring:platform-overview' %}">Panorama</a>
+                            {% endif %}
+                        </div>
+                    </details>
+                {% endif %}
+                <span class="user">{{ user.username }}</span>
+                <a href="/admin/">Admin</a>
+                <form method="post" action="{% url 'logout' %}" class="logout-form">
+                    {% csrf_token %}
+                    <button type="submit" class="link-button">Salir</button>
+                </form>
+            {% else %}
+                <a href="{% url 'login' %}">Entrar</a>
+            {% endif %}
+        </nav>
+    </header>
+    <main>
+        {% if messages %}
+            <ul class="messages">
+                {% for message in messages %}
+                    <li class="message {{ message.tags }}">{{ message }}</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+        {% block content %}{% endblock %}
+    </main>
+</body>
+</html>
